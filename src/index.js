@@ -5,11 +5,12 @@ import {
   View,
   Linking,
   Button,
+  Platform,
 } from 'react-native';
+import uuidV4 from 'uuid/v4';
+import shittyQs from 'shitty-qs';
 
 const DROPBOX_APP_KEY = 'bol535f38zp9krv';//change with your app key this one is not valid
-import uuidV4 from 'uuid/v4';
-
 export default class DropboxOAuthSample extends Component {
 
   constructor(props) {
@@ -30,11 +31,19 @@ export default class DropboxOAuthSample extends Component {
   }
 
   handleLinkingUrl(event) {
-
+    var [, query_string] = event.url.match(/\#(.*)/);
+    var query = shittyQs(query_string);
+    if (this.state.verification === query.state) {
+      this.setState({isDropboxInit:true,apiToken:query.access_token})
+    } else {
+      alert("Verification non égale");
+    }
   }
 
   loginWithDropbox() {
-
+    const redirect_uri = Platform.OS === 'ios' ? 'dropboxoauthsample://open' : 'https://www.dropboxoauthsample.com/open';
+    const url = `https://www.dropbox.com/oauth2/authorize?response_type=token&client_id=${DROPBOX_APP_KEY}&redirect_uri=${redirect_uri}&state=${this.state.verification}`;
+    Linking.openURL(url).catch(err => console.error('An error occurred', err));
   }
 
   render() {
